@@ -31,7 +31,6 @@ class UserCard extends StatelessWidget {
     final diff = state.diff ?? Offset.zero;
 
     final amount = (diff.dx ?? 0) / Home.swipeThreshold(context);
-    final amountAbs = amount.abs();
     return Transform.rotate(
       angle: -(diff.dx ?? 0) / deviceWidth * math.pi / 24,
       origin: state.localFingerPosition ?? Offset.zero,
@@ -62,13 +61,13 @@ class UserCard extends StatelessWidget {
             ),
             Positioned.fill(
               child: Opacity(
-                opacity: amount < 0 ? 0 : math.min(amountAbs, 1),
+                opacity: CardLabelType.like.preferredOpacity(amount),
                 child: CardLabel.like(),
               ),
             ),
             Positioned.fill(
               child: Opacity(
-                opacity: amount > 0 ? 0 : math.min(amountAbs, 1),
+                opacity: CardLabelType.nope.preferredOpacity(amount),
                 child: CardLabel.nope(),
               ),
             ),

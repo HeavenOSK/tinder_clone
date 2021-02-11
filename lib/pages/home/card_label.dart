@@ -6,6 +6,26 @@ const _likeColor = Color.fromRGBO(70, 195, 120, 1);
 const _nopeColor = Color.fromRGBO(220, 90, 108, 1);
 const _labelAngle = math.pi / 2 * 0.2;
 
+enum CardLabelType {
+  like,
+  nope,
+}
+
+extension CardLabelTypeConfig on CardLabelType {
+  bool get _isLike => this == CardLabelType.like;
+
+  double preferredOpacity(double amount) {
+    final amountAbs = amount.abs();
+    return _isLike
+        ? amount < 0
+            ? 0
+            : math.min(amountAbs, 1)
+        : amount > 0
+            ? 0
+            : math.min(amountAbs, 1);
+  }
+}
+
 class CardLabel extends StatelessWidget {
   const CardLabel._({
     @required this.color,
@@ -16,6 +36,7 @@ class CardLabel extends StatelessWidget {
   }) : super(key: key);
 
   factory CardLabel.like() {
+    // TODO(heavenOSK): Implement with Extension.
     return const CardLabel._(
       color: _likeColor,
       label: 'LIKE',
@@ -25,6 +46,7 @@ class CardLabel extends StatelessWidget {
   }
 
   factory CardLabel.nope() {
+    // TODO(heavenOSK): Implement with Extension.
     return const CardLabel._(
       color: _nopeColor,
       label: 'NOPE',
