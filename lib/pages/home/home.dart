@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:tinder_clone/pages/home/card_builder.dart';
 import 'package:tinder_clone/pages/home/controller/swipe_session_state.dart';
-import 'package:tinder_clone/pages/home/frame.dart';
-import 'package:tinder_clone/pages/home/user_card.dart';
 
 extension _Animating on AnimationController {
   bool get animating =>
       status == AnimationStatus.forward || status == AnimationStatus.reverse;
 }
 
+typedef CardBuilder = Widget Function(
+  BuildContext context,
+  BoxConstraints constraints,
+);
+
 class Home extends StatefulWidget {
   const Home({Key key}) : super(key: key);
 
   static double swipeThreshold(BuildContext context) =>
-      MediaQuery.of(context).size.width * 0.25;
+      MediaQuery.of(context).size.width * 0.2;
 
   @override
   _HomeState createState() => _HomeState();
@@ -43,11 +47,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 300),
     );
   }
-
-  static Offset defaultPosition(BuildContext context) => Offset(
-        UserCard.padding.left,
-        Frame.topPadding(context) + UserCard.padding.top,
-      );
 
   var _sessionState = const SwipeSessionState();
 
@@ -169,35 +168,82 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final position = defaultPosition(context);
     final diff = sessionState.diff ?? Offset.zero;
-    return Frame(
-      onReset: () {
-        sessionState = const SwipeSessionState();
-      },
-      body: Stack(
+
+    return Scaffold(
+      backgroundColor: Colors.lightGreenAccent,
+      appBar: AppBar(
+        backgroundColor: Colors.lightBlueAccent,
+        actions: [
+          TextButton(
+            onPressed: () {
+              sessionState = const SwipeSessionState();
+            },
+            child: const Text('RESET'),
+          )
+        ],
+      ),
+      body: Column(
         children: [
-          Positioned(
-            top: position.dy + diff.dy,
-            left: position.dx + diff.dx,
-            child: UserCard(
-              onPanStart: (d) {
-                startToHold(
-                  offset: d.globalPosition,
-                  localPosition: d.localPosition,
+          const SizedBox(
+            height: kToolbarHeight,
+          ),
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return Stack(
+                  children: [
+                    Positioned(
+                      top: diff.dy,
+                      left: diff.dx,
+                      child: CardBuilderWidget(
+                        constraints: constraints,
+                        onPanStart: (d) {
+                          startToHold(
+                            offset: d.globalPosition,
+                            localPosition: d.localPosition,
+                          );
+                          print('globalPosition:${d.globalPosition}, '
+                              'localPosition:${d.localPosition}');
+                        },
+                        onPanUpdate: (d) {
+                          updatePosition(
+                            offset: d.globalPosition,
+                            localPosition: d.localPosition,
+                          );
+                          // print('globalPosition:${d.globalPosition}, '
+                          //     'localPosition:${d.localPosition}');
+                          print(_sessionState);
+                        },
+                        onPanEnd: (d) {
+                          leave();
+                        },
+                        state: _sessionState,
+                        builder: (_, constraints) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 20,
+                            ),
+                            child: Container(
+                              height: double.infinity,
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 );
               },
-              onPanUpdate: (d) {
-                updatePosition(
-                  offset: d.globalPosition,
-                  localPosition: d.localPosition,
-                );
-              },
-              onPanEnd: (d) {
-                leave();
-              },
-              state: _sessionState,
             ),
+          ),
+          const SizedBox(
+            height: kToolbarHeight,
           ),
         ],
       ),
