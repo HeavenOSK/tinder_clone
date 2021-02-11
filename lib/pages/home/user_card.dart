@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:tinder_clone/pages/home/card_label.dart';
 import 'package:tinder_clone/pages/home/controller/swipe_session_state.dart';
 import 'package:tinder_clone/pages/home/frame.dart';
 
@@ -34,24 +35,34 @@ class UserCard extends StatelessWidget {
         onPanStart: onPanStart,
         onPanUpdate: onPanUpdate,
         onPanEnd: onPanEnd,
-        child: Container(
-          height: deviceHeight -
-              Frame.topPadding(context) -
-              Frame.bottomPadding -
-              padding.top * 2,
-          width: deviceWidth - padding.left * 2,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            // boxShadow: [
-            //   BoxShadow(
-            //     offset: const Offset(0, 2),
-            //     blurRadius: 15,
-            //     spreadRadius: 0,
-            //     color: Colors.black.withOpacity(0.25),
-            //   ),
-            // ],
-          ),
+        child: Stack(
+          children: [
+            Container(
+              height: deviceHeight -
+                  Frame.topPadding(context) -
+                  Frame.bottomPadding -
+                  padding.top * 2,
+              width: deviceWidth - padding.left * 2,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                // boxShadow: [
+                //   BoxShadow(
+                //     offset: const Offset(0, 2),
+                //     blurRadius: 15,
+                //     spreadRadius: 0,
+                //     color: Colors.black.withOpacity(0.25),
+                //   ),
+                // ],
+              ),
+            ),
+            Positioned.fill(
+              child: CardLabel.like(),
+            ),
+            Positioned.fill(
+              child: CardLabel.nope(),
+            ),
+          ],
         ),
       ),
     );
