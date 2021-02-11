@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:tinder_clone/pages/home/card_label.dart';
 import 'package:tinder_clone/pages/home/controller/swipe_session_state.dart';
 import 'package:tinder_clone/pages/home/frame.dart';
+import 'package:tinder_clone/pages/home/home.dart';
 
 class UserCard extends StatelessWidget {
   const UserCard({
@@ -28,6 +29,9 @@ class UserCard extends StatelessWidget {
     final deviceWidth = size.width;
 
     final diff = state.diff ?? Offset.zero;
+
+    final amount = (diff.dx ?? 0) / Home.swipeThreshold(context);
+    final amountAbs = amount.abs();
     return Transform.rotate(
       angle: -(diff.dx ?? 0) / deviceWidth * math.pi / 24,
       origin: state.localFingerPosition ?? Offset.zero,
@@ -57,10 +61,16 @@ class UserCard extends StatelessWidget {
               ),
             ),
             Positioned.fill(
-              child: CardLabel.like(),
+              child: Opacity(
+                opacity: amount < 0 ? 0 : math.min(amountAbs, 1),
+                child: CardLabel.like(),
+              ),
             ),
             Positioned.fill(
-              child: CardLabel.nope(),
+              child: Opacity(
+                opacity: amount > 0 ? 0 : math.min(amountAbs, 1),
+                child: CardLabel.nope(),
+              ),
             ),
           ],
         ),

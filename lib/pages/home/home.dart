@@ -10,7 +10,8 @@ extension _Animating on AnimationController {
 
 class Home extends StatefulWidget {
   const Home({Key key}) : super(key: key);
-
+  static double swipeThreshold(BuildContext context) =>
+      MediaQuery.of(context).size.width * 0.25;
   @override
   _HomeState createState() => _HomeState();
 }
@@ -23,6 +24,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   bool get animating =>
       _moveBackAnimationController.animating &&
       _swipeAssistAnimationController.animating;
+
   bool get canSwipe =>
       !animating ||
       (_moveBackAnimationController.animating && sessionState.diff.dx < 10);
@@ -94,9 +96,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
       return;
     }
 
-    final width = MediaQuery.of(context).size.width;
-
-    final shouldMoveBack = _sessionState.diff.dx.abs() <= width * 0.25;
+    final shouldMoveBack =
+        _sessionState.diff.dx.abs() <= Home.swipeThreshold(context);
     if (shouldMoveBack) {
       _moveBack();
     } else {
