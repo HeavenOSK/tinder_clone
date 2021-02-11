@@ -10,8 +10,10 @@ extension _Animating on AnimationController {
 
 class Home extends StatefulWidget {
   const Home({Key key}) : super(key: key);
+
   static double swipeThreshold(BuildContext context) =>
       MediaQuery.of(context).size.width * 0.25;
+
   @override
   _HomeState createState() => _HomeState();
 }
@@ -63,32 +65,35 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     @required Offset offset,
     @required Offset localPosition,
   }) {
-    if (canSwipe) {
-      if (_moveBackAnimationController.animating) {
-        _moveBackAnimationController.stop();
-      }
-      sessionState = sessionState.copyWith(
-        localPosition: localPosition,
-        startPosition: offset,
-        currentPosition: offset,
-      );
+    if (!canSwipe) {
+      return;
     }
+
+    if (_moveBackAnimationController.animating) {
+      _moveBackAnimationController.stop();
+    }
+    sessionState = sessionState.copyWith(
+      localPosition: localPosition,
+      startPosition: offset,
+      currentPosition: offset,
+    );
   }
 
   void updatePosition({
     @required Offset offset,
     @required Offset localPosition,
   }) {
-    if (canSwipe) {
-      if (_moveBackAnimationController.animating) {
-        _moveBackAnimationController.stop();
-      }
-      sessionState = sessionState.copyWith(
-        localPosition: sessionState.localPosition ?? localPosition,
-        startPosition: sessionState.startPosition ?? offset,
-        currentPosition: offset,
-      );
+    if (!canSwipe) {
+      return;
     }
+    if (_moveBackAnimationController.animating) {
+      _moveBackAnimationController.stop();
+    }
+    sessionState = sessionState.copyWith(
+      localPosition: sessionState.localPosition ?? localPosition,
+      startPosition: sessionState.startPosition ?? offset,
+      currentPosition: offset,
+    );
   }
 
   void leave() {
@@ -146,7 +151,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     final multiple = deviceWidth / _sessionState.diff.dx.abs();
     _positionAnimation = Tween<Offset>(
       begin: sessionState.currentPosition,
-      end: sessionState.currentPosition + sessionState.diff * multiple * 2,
+      end: sessionState.currentPosition + sessionState.diff * multiple * 1.5,
     ).animate(
       CurvedAnimation(
         parent: _swipeAssistAnimationController,
