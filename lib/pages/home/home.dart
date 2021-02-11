@@ -180,7 +180,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                   offset: d.globalPosition,
                   localPosition: d.localPosition,
                 );
-                print(d);
               },
               onPanUpdate: (d) {
                 updatePosition(
@@ -190,7 +189,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
               },
               onPanEnd: (d) {
                 leave();
-                print(d.velocity.pixelsPerSecond.dx);
               },
               state: _sessionState,
             ),

@@ -29,10 +29,10 @@ class Frame extends StatelessWidget {
             width: double.infinity,
             color: Colors.transparent,
             alignment: Alignment.centerRight,
-            padding: EdgeInsets.all(8),
+            padding: const EdgeInsets.all(8),
             child: TextButton(
               onPressed: onReset,
-              child: Text('RESET'),
+              child: const Text('RESET'),
             ),
           ),
           body,

@@ -13,11 +13,11 @@ class InitialPage extends StatelessWidget {
             onPressed: () {
               Navigator.of(context).push<void>(
                 MaterialPageRoute(
-                  builder: (_) => Home(),
+                  builder: (_) => const Home(),
                 ),
               );
             },
-            child: Text('Navigate to HOME'),
+            child: const Text('Navigate to HOME'),
           ),
         ),
       ),

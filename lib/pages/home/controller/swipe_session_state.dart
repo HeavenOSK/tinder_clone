@@ -31,7 +31,7 @@ extension SwipeSessionStateX on SwipeSessionState {
     if (localPosition == null) {
       return null;
     }
-    return localPosition + Offset(0, -50);
+    return localPosition + const Offset(0, -50);
   }
 }
 
