@@ -19,7 +19,7 @@ extension CardLabelTypeConfig on CardLabelType {
     return _isLike
         ? amount < 0
             ? 0
-            // ラベルの色が濃いのにカード送りされるとムカつく。
+            // ラベルの色が濃いのにカードが戻るとムカつく。
             : math.min(amountAbs * 0.8, 1)
         : amount > 0
             ? 0
