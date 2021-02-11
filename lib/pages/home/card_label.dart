@@ -19,10 +19,11 @@ extension CardLabelTypeConfig on CardLabelType {
     return _isLike
         ? amount < 0
             ? 0
-            : math.min(amountAbs, 1)
+            // ラベルの色が濃いのにカード送りされるとムカつく。
+            : math.min(amountAbs * 0.8, 1)
         : amount > 0
             ? 0
-            : math.min(amountAbs, 1);
+            : math.min(amountAbs * 0.8, 1);
   }
 }
 
@@ -41,6 +42,7 @@ class CardLabel extends StatelessWidget {
       color: _likeColor,
       label: 'LIKE',
       angle: -_labelAngle,
+      // When user swipes right, user can see this label.
       alignment: Alignment.topLeft,
     );
   }
