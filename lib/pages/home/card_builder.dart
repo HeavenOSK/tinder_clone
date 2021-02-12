@@ -2,7 +2,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:tinder_clone/pages/home/controller/swipe_session_state.dart';
-import 'package:tinder_clone/pages/home/swipable_stack.dart';
 
 class CardBuilderWidget extends StatelessWidget {
   const CardBuilderWidget({
@@ -11,13 +10,13 @@ class CardBuilderWidget extends StatelessWidget {
     @required this.onPanStart,
     @required this.onPanUpdate,
     @required this.onPanEnd,
-    @required this.builder,
+    @required this.child,
     @required this.canSwipe,
     Key key,
   }) : super(key: key);
 
   final SwipeSessionState state;
-  final CardBuilder builder;
+  final Widget child;
   final BoxConstraints constraints;
   final GestureDragStartCallback onPanStart;
   final GestureDragUpdateCallback onPanUpdate;
@@ -39,10 +38,7 @@ class CardBuilderWidget extends StatelessWidget {
             onPanStart: onPanStart,
             onPanUpdate: onPanUpdate,
             onPanEnd: onPanEnd,
-            child: builder(
-              context,
-              constraints,
-            ),
+            child: child,
           ),
         ),
       ),

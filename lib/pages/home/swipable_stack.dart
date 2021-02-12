@@ -12,15 +12,18 @@ extension _Animating on AnimationController {
 typedef CardBuilder = Widget Function(
   BuildContext context,
   BoxConstraints constraints,
+  int index,
 );
 
 class SwipableStack extends StatefulWidget {
   const SwipableStack({
     @required this.cardBuilder,
+    @required this.itemCount,
     Key key,
   }) : super(key: key);
 
   final CardBuilder cardBuilder;
+  final int itemCount;
 
   static double swipeThreshold(BuildContext context) =>
       MediaQuery.of(context).size.width * 0.22;
@@ -43,6 +46,8 @@ class _SwipableStackState extends State<SwipableStack>
       !animating ||
       (_moveBackAnimationController.animating && sessionState.diff.dx < 10);
 
+  int _currentIndex = 0;
+
   @override
   void initState() {
     super.initState();
@@ -52,7 +57,7 @@ class _SwipableStackState extends State<SwipableStack>
     );
     _swipeAssistAnimationController ??= AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 250),
     );
   }
 
@@ -155,10 +160,12 @@ class _SwipableStackState extends State<SwipableStack>
     }
 
     final deviceWidth = MediaQuery.of(context).size.width;
-    final multiple = deviceWidth / _sessionState.diff.dx.abs();
+    final diffXAbs = _sessionState.diff.dx.abs();
+    final multiple =
+        (deviceWidth - diffXAbs * 0.25) / _sessionState.diff.dx.abs();
     _positionAnimation = Tween<Offset>(
       begin: sessionState.currentPosition,
-      end: sessionState.currentPosition + sessionState.diff * multiple * 1.5,
+      end: sessionState.currentPosition + sessionState.diff * multiple * 1,
     ).animate(
       CurvedAnimation(
         parent: _swipeAssistAnimationController,
@@ -170,79 +177,138 @@ class _SwipableStackState extends State<SwipableStack>
     _swipeAssistAnimationController.forward(from: 0).then(
       (_) {
         _positionAnimation.removeListener(_updatePosition);
+        setState(() {
+          _currentIndex += 1;
+          sessionState = const SwipeSessionState();
+        });
       },
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final diff = sessionState.diff ?? Offset.zero;
     return LayoutBuilder(
       builder: (context, constraints) {
-        final x = diff.dx.abs();
-        final p = x != null ? x / (MediaQuery.of(context).size.width * 0.4) : 0;
-        final percentage = min(p, 1);
-        final diffConstraints = constraints * (0.1 * (1 - percentage));
-
         return Stack(
-          children: [
-            Positioned(
-              top: Offset.zero.dy + diffConstraints.maxHeight / 2,
-              left: Offset.zero.dx + diffConstraints.maxWidth / 2,
-              child: CardBuilderWidget(
-                canSwipe: false,
-                constraints: constraints * (0.9 + 0.1 * percentage),
-                onPanStart: (d) {
-                  startToHold(
-                    offset: d.globalPosition,
-                    localPosition: d.localPosition,
-                  );
-                },
-                onPanUpdate: (d) {
-                  updatePosition(
-                    offset: d.globalPosition,
-                    localPosition: d.localPosition,
-                  );
-                },
-                onPanEnd: (d) {
-                  leave();
-                },
-                state: _sessionState,
-                builder: widget.cardBuilder,
-              ),
-            ),
-            Positioned(
-              top: diff.dy,
-              left: diff.dx,
-              child: Opacity(
-                opacity: 0.7,
-                child: CardBuilderWidget(
-                  canSwipe: true,
-                  constraints: constraints,
-                  onPanStart: (d) {
-                    startToHold(
-                      offset: d.globalPosition,
-                      localPosition: d.localPosition,
-                    );
-                  },
-                  onPanUpdate: (d) {
-                    updatePosition(
-                      offset: d.globalPosition,
-                      localPosition: d.localPosition,
-                    );
-                  },
-                  onPanEnd: (d) {
-                    leave();
-                  },
-                  state: _sessionState,
-                  builder: widget.cardBuilder,
-                ),
-              ),
-            ),
-          ],
+          children: _buildCards(context, constraints),
         );
       },
     );
+  }
+
+  List<Widget> _buildCards(BuildContext context, BoxConstraints constraints) {
+    final cards = <Widget>[];
+    for (var index = _currentIndex; index < _currentIndex + 3; index++) {
+      cards.add(
+        widget.cardBuilder(
+          context,
+          constraints,
+          index,
+        ),
+      );
+    }
+    return List.generate(cards.length, (index) {
+      return _buildCard(
+        index: index,
+        constraints: constraints,
+        child: cards[index],
+      );
+    }).reversed.toList();
+  }
+
+  Positioned _buildCard({
+    @required int index,
+    @required BoxConstraints constraints,
+    @required Widget child,
+  }) {
+    final diff = _sessionState.diff ?? Offset.zero;
+    if (index == 0) {
+      return Positioned(
+        key: child.key,
+        top: diff.dy,
+        left: diff.dx,
+        child: CardBuilderWidget(
+          canSwipe: index == 0,
+          constraints: constraints,
+          onPanStart: (d) {
+            startToHold(
+              offset: d.globalPosition,
+              localPosition: d.localPosition,
+            );
+          },
+          onPanUpdate: (d) {
+            updatePosition(
+              offset: d.globalPosition,
+              localPosition: d.localPosition,
+            );
+          },
+          onPanEnd: (d) {
+            leave();
+          },
+          state: _sessionState,
+          child: child,
+        ),
+      );
+    } else if (index == 1) {
+      final x = diff.dx.abs();
+      final p = x != null ? x / (MediaQuery.of(context).size.width * 0.4) : 0;
+      final percentage = min(p, 1);
+      final diffConstraints = constraints * (0.1 * (1 - percentage));
+      return Positioned(
+        key: child.key,
+        top: Offset.zero.dy + diffConstraints.maxHeight / 2,
+        left: Offset.zero.dx + diffConstraints.maxWidth / 2,
+        child: CardBuilderWidget(
+          canSwipe: false,
+          constraints: constraints * (0.9 + 0.1 * percentage),
+          onPanStart: (d) {
+            startToHold(
+              offset: d.globalPosition,
+              localPosition: d.localPosition,
+            );
+          },
+          onPanUpdate: (d) {
+            updatePosition(
+              offset: d.globalPosition,
+              localPosition: d.localPosition,
+            );
+          },
+          onPanEnd: (d) {
+            leave();
+          },
+          state: _sessionState,
+          child: child,
+        ),
+      );
+    } else {
+      final diffConstraints = constraints * 0.1;
+      return Positioned(
+        key: child.key,
+        top: Offset.zero.dy + diffConstraints.maxHeight / 2,
+        left: Offset.zero.dx + diffConstraints.maxWidth / 2,
+        child: CardBuilderWidget(
+          canSwipe: false,
+          constraints: constraints * 0.9,
+          onPanStart: (d) {
+            startToHold(
+              offset: d.globalPosition,
+              localPosition: d.localPosition,
+            );
+          },
+          onPanUpdate: (d) {
+            updatePosition(
+              offset: d.globalPosition,
+              localPosition: d.localPosition,
+            );
+          },
+          onPanEnd: (d) {
+            leave();
+          },
+          state: _sessionState,
+          child: child,
+        ),
+      );
+    }
   }
 
   @override

@@ -1,18 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:tinder_clone/pages/home/swipable_stack.dart';
 
-class Home extends StatelessWidget {
+class Home extends StatefulWidget {
   const Home({Key key}) : super(key: key);
+
+  @override
+  _HomeState createState() => _HomeState();
+}
+
+class _HomeState extends State<Home> {
+  bool _withOpacity = true;
   @override
   Widget build(BuildContext context) {
+    final _colors = const [
+      Color(0xffb388ff),
+      Color(0xff8c9eff),
+      Color(0xff82b1ff),
+      Color(0xff80d8ff),
+      Color(0xff84ffff),
+      Color(0xffa7ffeb),
+      Color(0xffb9f6ca),
+      Color(0xffccff90),
+      Color(0xffffff8d),
+      Color(0xffffe57f),
+      Color(0xffffd180),
+      Color(0xffff9e80),
+      Color(0xffff8a80),
+      Color(0xffff80ab),
+      Color(0xffea80fc),
+    ].map((color) => color.withOpacity(_withOpacity ? 0.75 : 1)).toList();
     return Scaffold(
-      backgroundColor: Colors.lightGreenAccent,
       appBar: AppBar(
-        backgroundColor: Colors.lightBlueAccent,
+        elevation: 1,
+        backgroundColor: Colors.white,
         actions: [
-          TextButton(
-            onPressed: () {},
-            child: const Text('RESET'),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextButton(
+              onPressed: () {
+                setState(() {
+                  _withOpacity = !_withOpacity;
+                });
+              },
+              child: const Text('opacity'),
+            ),
           )
         ],
       ),
@@ -23,7 +54,8 @@ class Home extends StatelessWidget {
           ),
           Expanded(
             child: SwipableStack(
-              cardBuilder: (_, constraints) {
+              itemCount: 50,
+              cardBuilder: (_, constraints, index) {
                 return Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 10,
@@ -33,16 +65,11 @@ class Home extends StatelessWidget {
                     height: double.infinity,
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: _colors[index.abs() % _colors.length],
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Center(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          print('pressed');
-                        },
-                        child: Icon(Icons.stop),
-                      ),
+                      child: Text('index:$index'),
                     ),
                   ),
                 );
