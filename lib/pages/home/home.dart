@@ -10,6 +10,7 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   bool _withOpacity = true;
+
   @override
   Widget build(BuildContext context) {
     final _colors = const [
@@ -35,7 +36,7 @@ class _HomeState extends State<Home> {
         backgroundColor: Colors.white,
         actions: [
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(8),
             child: TextButton(
               onPressed: () {
                 setState(() {
@@ -57,22 +58,26 @@ class _HomeState extends State<Home> {
               onSwipeCompleted: (index, direction) {
                 print('$index, $direction');
               },
-              itemCount: 50,
-              cardBuilder: (_, index) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 20,
-                  ),
-                  child: Container(
-                    height: double.infinity,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: _colors[index.abs() % _colors.length],
-                      borderRadius: BorderRadius.circular(8),
+              onWillMoveNext: (index, direction) {
+                return direction != SwipeDirection.left || index % 3 != 0;
+              },
+              builder: (_, index) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 32,
                     ),
-                    child: Center(
-                      child: Text('index:$index'),
+                    child: AspectRatio(
+                      aspectRatio: 1 / 2,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: _colors[index.abs() % _colors.length],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Center(
+                          child: Text('index:$index'),
+                        ),
+                      ),
                     ),
                   ),
                 );

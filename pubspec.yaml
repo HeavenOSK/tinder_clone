@@ -6,12 +6,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_hooks: 0.15.0
   flutter_localizations:
     sdk: flutter
   # state management
-  state_notifier: 0.6.0
   hooks_riverpod: 0.12.1
-  flutter_hooks: 0.15.0
+  state_notifier: 0.6.0
   subscription_holder: 2.0.0+3
   rxdart: 0.24.1
   # ui

@@ -3,26 +3,10 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'swipe_session_state.freezed.dart';
 
-enum SwipeSessionPhase {
-  waiting,
-  hold,
-  finish,
-}
-
 extension SwipeSessionStateX on SwipeSessionState {
-  SwipeSessionPhase get phase {
-    if (startPosition == null && currentPosition == null) {
-      return SwipeSessionPhase.waiting;
-    } else if (currentPosition == null) {
-      return SwipeSessionPhase.finish;
-    } else {
-      return SwipeSessionPhase.hold;
-    }
-  }
-
   Offset get diff {
     if (this == null || currentPosition == null || startPosition == null) {
-      return null;
+      return Offset.zero;
     }
     return currentPosition - startPosition;
   }
