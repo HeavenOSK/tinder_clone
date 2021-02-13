@@ -58,7 +58,7 @@ class _HomeState extends State<Home> {
                 print('$index, $direction');
               },
               itemCount: 50,
-              cardBuilder: (_, constraints, index) {
+              cardBuilder: (_, index) {
                 return Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 10,

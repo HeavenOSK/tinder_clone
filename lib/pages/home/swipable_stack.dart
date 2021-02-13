@@ -9,7 +9,6 @@ extension _Animating on AnimationController {
 
 typedef CardBuilder = Widget Function(
   BuildContext context,
-  BoxConstraints constraints,
   int index,
 );
 
@@ -83,64 +82,15 @@ class _SwipableStackState extends State<SwipableStack>
     }
   }
 
-  void startToHold({
-    @required Offset offset,
-    @required Offset localPosition,
-  }) {
-    if (!canSwipe) {
-      return;
-    }
-
-    if (_moveBackAnimationController.animating) {
-      _moveBackAnimationController.stop();
-    }
-    sessionState = sessionState.copyWith(
-      localPosition: localPosition,
-      startPosition: offset,
-      currentPosition: offset,
-    );
-  }
-
-  void updatePosition({
-    @required Offset offset,
-    @required Offset localPosition,
-  }) {
-    if (!canSwipe) {
-      return;
-    }
-    if (_moveBackAnimationController.animating) {
-      _moveBackAnimationController.stop();
-    }
-    sessionState = sessionState.copyWith(
-      localPosition: sessionState.localPosition ?? localPosition,
-      startPosition: sessionState.startPosition ?? offset,
-      currentPosition: offset,
-    );
-  }
-
-  void leave() {
-    if (animating) {
-      return;
-    }
-
-    final shouldMoveBack =
-        _sessionState.diff.dx.abs() <= SwipableStack.swipeThreshold(context);
-    if (shouldMoveBack) {
-      _moveBack();
-    } else {
-      _moveNext();
+  void _animatePosition() {
+    if (_positionAnimation != null) {
+      sessionState = sessionState.copyWith(
+        currentPosition: _positionAnimation.value,
+      );
     }
   }
 
   void _moveBack() {
-    void _updatePosition() {
-      if (_positionAnimation != null) {
-        sessionState = sessionState.copyWith(
-          currentPosition: _positionAnimation.value,
-        );
-      }
-    }
-
     _positionAnimation = Tween<Offset>(
       begin: sessionState.currentPosition,
       end: sessionState.startPosition,
@@ -149,33 +99,21 @@ class _SwipableStackState extends State<SwipableStack>
         parent: _moveBackAnimationController,
         curve: const ElasticOutCurve(0.95),
       ),
-    )..addListener(_updatePosition);
+    )..addListener(_animatePosition);
 
     /// It's done.
     _moveBackAnimationController.forward(from: 0).then(
       (_) {
-        _positionAnimation.removeListener(_updatePosition);
+        _positionAnimation.removeListener(_animatePosition);
         sessionState = const SwipeSessionState();
       },
     );
   }
 
   void _moveNext() {
-    void _updatePosition() {
-      if (_positionAnimation != null) {
-        sessionState = sessionState.copyWith(
-          currentPosition: _positionAnimation.value,
-        );
-      }
-    }
-
     final isDirectionRight = sessionState.diff.dx > 0;
-    void _complete() {
-      widget.onSwipeCompleted(
-        _currentIndex,
-        isDirectionRight ? SwipeDirection.right : SwipeDirection.left,
-      );
-    }
+    final swipeDirection =
+        isDirectionRight ? SwipeDirection.right : SwipeDirection.left;
 
     final deviceWidth = MediaQuery.of(context).size.width;
     final diffXAbs = _sessionState.diff.dx.abs();
@@ -189,13 +127,16 @@ class _SwipableStackState extends State<SwipableStack>
         parent: _swipeAssistAnimationController,
         curve: Curves.easeOutCubic,
       ),
-    )..addListener(_updatePosition);
+    )..addListener(_animatePosition);
 
     /// It's done.
     _swipeAssistAnimationController.forward(from: 0).then(
       (_) {
-        _complete?.call();
-        _positionAnimation.removeListener(_updatePosition);
+        widget.onSwipeCompleted?.call(
+          _currentIndex,
+          swipeDirection,
+        );
+        _positionAnimation.removeListener(_animatePosition);
         setState(() {
           _currentIndex += 1;
           sessionState = const SwipeSessionState();
@@ -221,7 +162,6 @@ class _SwipableStackState extends State<SwipableStack>
       cards.add(
         widget.cardBuilder(
           context,
-          constraints,
           index,
         ),
       );
@@ -232,19 +172,43 @@ class _SwipableStackState extends State<SwipableStack>
         index: index,
         areaConstraints: constraints,
         onPanStart: (d) {
-          startToHold(
-            offset: d.globalPosition,
+          if (!canSwipe) {
+            return;
+          }
+
+          if (_moveBackAnimationController.animating) {
+            _moveBackAnimationController.stop();
+          }
+          sessionState = sessionState.copyWith(
             localPosition: d.localPosition,
+            startPosition: d.globalPosition,
+            currentPosition: d.globalPosition,
           );
         },
         onPanUpdate: (d) {
-          updatePosition(
-            offset: d.globalPosition,
-            localPosition: d.localPosition,
+          if (!canSwipe) {
+            return;
+          }
+          if (_moveBackAnimationController.animating) {
+            _moveBackAnimationController.stop();
+          }
+          sessionState = sessionState.copyWith(
+            localPosition: sessionState.localPosition ?? d.localPosition,
+            startPosition: sessionState.startPosition ?? d.globalPosition,
+            currentPosition: d.globalPosition,
           );
         },
         onPanEnd: (d) {
-          leave();
+          if (animating) {
+            return;
+          }
+          final shouldMoveBack = _sessionState.diff.dx.abs() <=
+              SwipableStack.swipeThreshold(context);
+          if (shouldMoveBack) {
+            _moveBack();
+          } else {
+            _moveNext();
+          }
         },
         child: cards[index],
       );
