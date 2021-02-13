@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:tinder_clone/pages/home/controller/swipe_session_state.dart';
 import 'package:tinder_clone/pages/home/swipable_positioned.dart';
@@ -22,7 +24,6 @@ typedef OnWillMoveNext = bool Function(
   SwipeDirection direction,
 );
 
-// TODO(heavenOSK): 有限リスト
 // TODO(heavenOSK): Controller ロジック
 // TODO(heavenOSK): カードにラベルを表示する　API
 class SwipableStack extends StatefulWidget {
@@ -30,12 +31,14 @@ class SwipableStack extends StatefulWidget {
     @required this.builder,
     this.onSwipeCompleted,
     this.onWillMoveNext,
+    this.itemCount,
     Key key,
   }) : super(key: key);
 
   final IndexedWidgetBuilder builder;
   final SwipeCompletionCallback onSwipeCompleted;
   final OnWillMoveNext onWillMoveNext;
+  final int itemCount;
 
   @override
   _SwipableStackState createState() => _SwipableStackState();
@@ -110,7 +113,9 @@ class _SwipableStackState extends State<SwipableStack>
 
   List<Widget> _buildCards(BuildContext context, BoxConstraints constraints) {
     final cards = <Widget>[];
-    for (var index = _currentIndex; index < _currentIndex + 3; index++) {
+    for (var index = _currentIndex;
+        index < min(_currentIndex + 3, widget.itemCount ?? _currentIndex + 3);
+        index++) {
       cards.add(
         widget.builder(
           context,

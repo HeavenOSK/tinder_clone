@@ -82,6 +82,7 @@ class _HomeState extends State<Home> {
                   ),
                 );
               },
+              itemCount: 10,
             ),
           ),
           const SizedBox(
