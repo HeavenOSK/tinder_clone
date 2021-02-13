@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:tinder_clone/pages/home/controller/swipe_session_state.dart';
+import 'package:tinder_clone/pages/home/swipe_session_state/swipe_sesion_state.dart';
 
 class UserCard extends StatelessWidget {
   const UserCard({
