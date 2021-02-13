@@ -22,10 +22,12 @@ typedef OnWillMoveNext = bool Function(
   SwipeDirection direction,
 );
 
+// TODO(heavenOSK): 有限リスト
+// TODO(heavenOSK): Controller ロジック
+// TODO(heavenOSK): カードにラベルを表示する　API
 class SwipableStack extends StatefulWidget {
   const SwipableStack({
     @required this.builder,
-    this.swipeThreshold = _defaultSwipeThreshold,
     this.onSwipeCompleted,
     this.onWillMoveNext,
     Key key,
@@ -34,9 +36,6 @@ class SwipableStack extends StatefulWidget {
   final IndexedWidgetBuilder builder;
   final SwipeCompletionCallback onSwipeCompleted;
   final OnWillMoveNext onWillMoveNext;
-  final double swipeThreshold;
-
-  static const double _defaultSwipeThreshold = 0.22;
 
   @override
   _SwipableStackState createState() => _SwipableStackState();
@@ -58,6 +57,7 @@ class _SwipableStackState extends State<SwipableStack>
           _moveBackAnimationController.value < 0.1);
 
   int _currentIndex = 0;
+  static const double _defaultSwipeThreshold = 0.22;
 
   var _sessionState = const SwipeSessionState();
 
@@ -165,7 +165,7 @@ class _SwipableStackState extends State<SwipableStack>
               return;
             }
             final shouldMoveBack = (_sessionState.diff?.dx?.abs() ?? 0) <=
-                constraints.maxWidth * widget.swipeThreshold;
+                constraints.maxWidth * _defaultSwipeThreshold;
             if (shouldMoveBack) {
               _moveBack();
               return;

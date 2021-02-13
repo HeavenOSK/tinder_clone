@@ -14,6 +14,10 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     final _colors = const [
+      Color(0xffff9e80),
+      Color(0xffff8a80),
+      Color(0xffff80ab),
+      Color(0xffea80fc),
       Color(0xffb388ff),
       Color(0xff8c9eff),
       Color(0xff82b1ff),
@@ -25,10 +29,6 @@ class _HomeState extends State<Home> {
       Color(0xffffff8d),
       Color(0xffffe57f),
       Color(0xffffd180),
-      Color(0xffff9e80),
-      Color(0xffff8a80),
-      Color(0xffff80ab),
-      Color(0xffea80fc),
     ].map((color) => color.withOpacity(_withOpacity ? 0.75 : 1)).toList();
     return Scaffold(
       appBar: AppBar(
