@@ -1,8 +1,6 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
-import 'package:tinder_clone/pages/home/card_builder.dart';
 import 'package:tinder_clone/pages/home/controller/swipe_session_state.dart';
+import 'package:tinder_clone/pages/home/swaipable_positioned.dart';
 
 extension _Animating on AnimationController {
   bool get animating =>
@@ -15,15 +13,27 @@ typedef CardBuilder = Widget Function(
   int index,
 );
 
+enum SwipeDirection {
+  left,
+  right,
+}
+
+typedef SwipCompletionCallback = void Function(
+  int index,
+  SwipeDirection direction,
+);
+
 class SwipableStack extends StatefulWidget {
-  const SwipableStack({
+  SwipableStack({
     @required this.cardBuilder,
     @required this.itemCount,
+    @required this.onSwipeCompleted,
     Key key,
   }) : super(key: key);
 
   final CardBuilder cardBuilder;
   final int itemCount;
+  SwipCompletionCallback onSwipeCompleted;
 
   static double swipeThreshold(BuildContext context) =>
       MediaQuery.of(context).size.width * 0.22;
@@ -159,6 +169,14 @@ class _SwipableStackState extends State<SwipableStack>
       }
     }
 
+    final isDirectionRight = sessionState.diff.dx > 0;
+    void _complete() {
+      widget.onSwipeCompleted(
+        _currentIndex,
+        isDirectionRight ? SwipeDirection.right : SwipeDirection.left,
+      );
+    }
+
     final deviceWidth = MediaQuery.of(context).size.width;
     final diffXAbs = _sessionState.diff.dx.abs();
     final multiple =
@@ -176,6 +194,7 @@ class _SwipableStackState extends State<SwipableStack>
     /// It's done.
     _swipeAssistAnimationController.forward(from: 0).then(
       (_) {
+        _complete?.call();
         _positionAnimation.removeListener(_updatePosition);
         setState(() {
           _currentIndex += 1;
@@ -208,107 +227,28 @@ class _SwipableStackState extends State<SwipableStack>
       );
     }
     return List.generate(cards.length, (index) {
-      return _buildCard(
+      return SwipablePositioned(
+        state: _sessionState,
         index: index,
-        constraints: constraints,
+        areaConstraints: constraints,
+        onPanStart: (d) {
+          startToHold(
+            offset: d.globalPosition,
+            localPosition: d.localPosition,
+          );
+        },
+        onPanUpdate: (d) {
+          updatePosition(
+            offset: d.globalPosition,
+            localPosition: d.localPosition,
+          );
+        },
+        onPanEnd: (d) {
+          leave();
+        },
         child: cards[index],
       );
     }).reversed.toList();
-  }
-
-  Positioned _buildCard({
-    @required int index,
-    @required BoxConstraints constraints,
-    @required Widget child,
-  }) {
-    final diff = _sessionState.diff ?? Offset.zero;
-    if (index == 0) {
-      return Positioned(
-        key: child.key,
-        top: diff.dy,
-        left: diff.dx,
-        child: CardBuilderWidget(
-          canSwipe: index == 0,
-          constraints: constraints,
-          onPanStart: (d) {
-            startToHold(
-              offset: d.globalPosition,
-              localPosition: d.localPosition,
-            );
-          },
-          onPanUpdate: (d) {
-            updatePosition(
-              offset: d.globalPosition,
-              localPosition: d.localPosition,
-            );
-          },
-          onPanEnd: (d) {
-            leave();
-          },
-          state: _sessionState,
-          child: child,
-        ),
-      );
-    } else if (index == 1) {
-      final x = diff.dx.abs();
-      final p = x != null ? x / (MediaQuery.of(context).size.width * 0.4) : 0;
-      final percentage = min(p, 1);
-      final diffConstraints = constraints * (0.1 * (1 - percentage));
-      return Positioned(
-        key: child.key,
-        top: Offset.zero.dy + diffConstraints.maxHeight / 2,
-        left: Offset.zero.dx + diffConstraints.maxWidth / 2,
-        child: CardBuilderWidget(
-          canSwipe: false,
-          constraints: constraints * (0.9 + 0.1 * percentage),
-          onPanStart: (d) {
-            startToHold(
-              offset: d.globalPosition,
-              localPosition: d.localPosition,
-            );
-          },
-          onPanUpdate: (d) {
-            updatePosition(
-              offset: d.globalPosition,
-              localPosition: d.localPosition,
-            );
-          },
-          onPanEnd: (d) {
-            leave();
-          },
-          state: _sessionState,
-          child: child,
-        ),
-      );
-    } else {
-      final diffConstraints = constraints * 0.1;
-      return Positioned(
-        key: child.key,
-        top: Offset.zero.dy + diffConstraints.maxHeight / 2,
-        left: Offset.zero.dx + diffConstraints.maxWidth / 2,
-        child: CardBuilderWidget(
-          canSwipe: false,
-          constraints: constraints * 0.9,
-          onPanStart: (d) {
-            startToHold(
-              offset: d.globalPosition,
-              localPosition: d.localPosition,
-            );
-          },
-          onPanUpdate: (d) {
-            updatePosition(
-              offset: d.globalPosition,
-              localPosition: d.localPosition,
-            );
-          },
-          onPanEnd: (d) {
-            leave();
-          },
-          state: _sessionState,
-          child: child,
-        ),
-      );
-    }
   }
 
   @override

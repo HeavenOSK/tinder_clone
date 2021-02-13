@@ -54,6 +54,9 @@ class _HomeState extends State<Home> {
           ),
           Expanded(
             child: SwipableStack(
+              onSwipeCompleted: (index, direction) {
+                print('$index, $direction');
+              },
               itemCount: 50,
               cardBuilder: (_, constraints, index) {
                 return Padding(
