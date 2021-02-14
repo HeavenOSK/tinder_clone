@@ -309,7 +309,7 @@ packages:
     source: hosted
     version: "0.2.0"
   hooks_riverpod:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: hooks_riverpod
       url: "https://pub.dartlang.org"
@@ -547,7 +547,7 @@ packages:
     source: hosted
     version: "1.4.0"
   provider:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: provider
       url: "https://pub.dartlang.org"
@@ -650,7 +650,7 @@ packages:
     source: hosted
     version: "1.10.0"
   state_notifier:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: state_notifier
       url: "https://pub.dartlang.org"

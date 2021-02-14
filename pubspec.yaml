@@ -10,8 +10,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   # state management
-  hooks_riverpod: 0.12.1
-  state_notifier: 0.6.0
+  provider:
   subscription_holder: 2.0.0+3
   rxdart: 0.24.1
   # ui

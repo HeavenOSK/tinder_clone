@@ -41,23 +41,23 @@ class SwipableStack extends StatefulWidget {
   final int itemCount;
 
   @override
-  _SwipableStackState createState() => _SwipableStackState();
+  SwipableStackState createState() => SwipableStackState();
 }
 
-class _SwipableStackState extends State<SwipableStack>
+class SwipableStackState extends State<SwipableStack>
     with TickerProviderStateMixin {
-  AnimationController _moveBackAnimationController;
+  AnimationController _swipeCancelAnimationController;
   AnimationController _swipeAssistAnimationController;
   Animation<Offset> _positionAnimation;
 
   bool get animating =>
-      _moveBackAnimationController.animating ||
+      _swipeCancelAnimationController.animating ||
       _swipeAssistAnimationController.animating;
 
   bool get canSwipeStart =>
       !animating ||
-      (_moveBackAnimationController.animating &&
-          _moveBackAnimationController.value < 0.1);
+      (_swipeCancelAnimationController.animating &&
+          _swipeCancelAnimationController.value < 0.1);
 
   int _currentIndex = 0;
   static const double _defaultSwipeThreshold = 0.22;
@@ -90,7 +90,7 @@ class _SwipableStackState extends State<SwipableStack>
   @override
   void initState() {
     super.initState();
-    _moveBackAnimationController ??= AnimationController(
+    _swipeCancelAnimationController ??= AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
@@ -135,8 +135,8 @@ class _SwipableStackState extends State<SwipableStack>
               return;
             }
 
-            if (_moveBackAnimationController.animating) {
-              _moveBackAnimationController
+            if (_swipeCancelAnimationController.animating) {
+              _swipeCancelAnimationController
                 ..stop()
                 ..reset();
             }
@@ -152,8 +152,8 @@ class _SwipableStackState extends State<SwipableStack>
             if (!canSwipeStart) {
               return;
             }
-            if (_moveBackAnimationController.animating) {
-              _moveBackAnimationController
+            if (_swipeCancelAnimationController.animating) {
+              _swipeCancelAnimationController
                 ..stop()
                 ..reset();
             }
@@ -172,13 +172,13 @@ class _SwipableStackState extends State<SwipableStack>
             final shouldMoveBack = (_sessionState.diff?.dx?.abs() ?? 0) <=
                 constraints.maxWidth * _defaultSwipeThreshold;
             if (shouldMoveBack) {
-              _moveBack();
+              _cancelSwipe();
               return;
             }
             if (_allowMoveNext) {
               _moveNext();
             } else {
-              _moveBack();
+              _cancelSwipe();
             }
           },
           child: cards[index],
@@ -197,19 +197,19 @@ class _SwipableStackState extends State<SwipableStack>
     }
   }
 
-  void _moveBack() {
+  void _cancelSwipe() {
     _positionAnimation = Tween<Offset>(
       begin: sessionState.currentPosition,
       end: sessionState.startPosition,
     ).animate(
       CurvedAnimation(
-        parent: _moveBackAnimationController,
+        parent: _swipeCancelAnimationController,
         curve: const ElasticOutCurve(0.95),
       ),
     )..addListener(_animatePosition);
 
     /// It's done.
-    _moveBackAnimationController.forward(from: 0).then(
+    _swipeCancelAnimationController.forward(from: 0).then(
       (_) {
         _positionAnimation.removeListener(_animatePosition);
         setState(() {
@@ -256,7 +256,7 @@ class _SwipableStackState extends State<SwipableStack>
 
   @override
   void dispose() {
-    _moveBackAnimationController?.dispose();
+    _swipeCancelAnimationController?.dispose();
     _swipeAssistAnimationController?.dispose();
     super.dispose();
   }
