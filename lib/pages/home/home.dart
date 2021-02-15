@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tinder_clone/pages/home/swipable_stack.dart';
+import 'package:tinder_clone/pages/home/swipable_stack_controller.dart';
 
 class Home extends StatefulWidget {
   const Home({Key key}) : super(key: key);
@@ -9,11 +10,19 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  bool _withOpacity = true;
+  final double _bottomAreaHeight = 100;
+  SwipableStackController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = SwipableStackController();
+  }
 
   @override
   Widget build(BuildContext context) {
     final _colors = const [
+      Color(0xffffd180),
       Color(0xffff9e80),
       Color(0xffff8a80),
       Color(0xffff80ab),
@@ -28,47 +37,26 @@ class _HomeState extends State<Home> {
       Color(0xffccff90),
       Color(0xffffff8d),
       Color(0xffffe57f),
-      Color(0xffffd180),
-    ].map((color) => color.withOpacity(_withOpacity ? 0.75 : 1)).toList();
+    ].map((color) => color.withOpacity(1)).toList();
     return Scaffold(
-      appBar: AppBar(
-        elevation: 1,
-        backgroundColor: Colors.white,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: TextButton(
-              onPressed: () {
-                setState(() {
-                  _withOpacity = !_withOpacity;
-                });
-              },
-              child: const Text('opacity'),
-            ),
-          )
-        ],
-      ),
-      body: Column(
-        children: [
-          const SizedBox(
-            height: kToolbarHeight,
-          ),
-          Expanded(
-            child: SwipableStack(
+      body: SafeArea(
+        child: Stack(
+          children: [
+            SwipableStack(
+              controller: _controller,
               onSwipeCompleted: (index, direction) {
                 print('$index, $direction');
               },
-              onWillMoveNext: (index, direction) {
-                return direction != SwipeDirection.left || index % 3 != 0;
-              },
               builder: (_, index) {
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 32,
-                    ),
-                    child: AspectRatio(
-                      aspectRatio: 1 / 2,
+                return Padding(
+                  padding: EdgeInsets.symmetric(
+                    vertical: _bottomAreaHeight,
+                  ),
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                      ),
                       child: Container(
                         decoration: BoxDecoration(
                           color: _colors[index.abs() % _colors.length],
@@ -82,13 +70,56 @@ class _HomeState extends State<Home> {
                   ),
                 );
               },
-              itemCount: 7,
             ),
-          ),
-          const SizedBox(
-            height: kToolbarHeight,
-          ),
-        ],
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: SizedBox(
+                height: _bottomAreaHeight,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      height: 64,
+                      width: 64,
+                      child: ElevatedButton(
+                        style: ButtonStyle(
+                          shape: MaterialStateProperty.resolveWith(
+                            (states) => RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                          ),
+                        ),
+                        onPressed: () {
+                          _controller.moveNext(SwipeDirection.left);
+                        },
+                        child: const Icon(Icons.navigate_before),
+                      ),
+                    ),
+                    const SizedBox(width: 120),
+                    SizedBox(
+                      height: 64,
+                      width: 64,
+                      child: ElevatedButton(
+                        style: ButtonStyle(
+                          shape: MaterialStateProperty.resolveWith(
+                            (states) => RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                          ),
+                        ),
+                        onPressed: () {
+                          _controller.moveNext(SwipeDirection.right);
+                        },
+                        child: const Icon(Icons.navigate_next),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -14,7 +14,7 @@ class App extends HookWidget {
     return MaterialApp(
       navigatorKey: navigatorKey,
       title: 'Flutter Demo',
-      theme: ThemeData(primarySwatch: Colors.blue),
+      theme: ThemeData(primarySwatch: Colors.red),
       localizationsDelegates: const [
         L10n.delegate,
         GlobalMaterialLocalizations.delegate,
