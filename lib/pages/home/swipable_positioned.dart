@@ -9,22 +9,29 @@ class SwipablePositioned extends StatelessWidget {
     @required this.index,
     @required this.state,
     @required this.areaConstraints,
-    @required this.onPanStart,
-    @required this.onPanUpdate,
-    @required this.onPanEnd,
     @required this.child,
-    this.overlay,
     Key key,
   }) : super(key: key);
+
+  static Widget overlay({
+    @required SwipeSessionState sessionState,
+    @required BoxConstraints areaConstraints,
+    @required Widget child,
+  }) {
+    return SwipablePositioned(
+      state: sessionState,
+      index: 0,
+      areaConstraints: areaConstraints,
+      child: IgnorePointer(
+        child: child,
+      ),
+    );
+  }
 
   final int index;
   final SwipeSessionState state;
   final Widget child;
   final BoxConstraints areaConstraints;
-  final GestureDragStartCallback onPanStart;
-  final GestureDragUpdateCallback onPanUpdate;
-  final GestureDragEndCallback onPanEnd;
-  final Widget overlay;
 
   Offset get _currentPositionDiff => state.differecne ?? Offset.zero;
 
@@ -46,7 +53,6 @@ class SwipablePositioned extends StatelessWidget {
 
   double _animationProgress(BuildContext context) {
     final x = _currentPositionDiff.dx.abs();
-    // TODO(heavenOSK): Confirm with different area sizes.
     final p = x != null ? x / (MediaQuery.of(context).size.width * 0.4) : 0;
     return min(p.toDouble(), 1);
   }
@@ -96,17 +102,7 @@ class SwipablePositioned extends StatelessWidget {
           constraints: _constraints(context),
           child: IgnorePointer(
             ignoring: !_isFirst,
-            child: GestureDetector(
-              onPanStart: onPanStart,
-              onPanUpdate: onPanUpdate,
-              onPanEnd: onPanEnd,
-              child: Stack(
-                children: [
-                  child,
-                  if (_isFirst && overlay != null) overlay,
-                ],
-              ),
-            ),
+            child: child,
           ),
         ),
       ),

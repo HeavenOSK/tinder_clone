@@ -29,7 +29,10 @@ typedef SwipableStackOverlayBuilder = Widget Function(
   Alignment alignmentPerThreshold,
 );
 
-// TODO(heavenOSK): カードにラベルを表示する　API
+typedef JudgeSwipeDirection = SwipeDirection Function(
+  Alignment alignmentPerThreshold,
+);
+
 class SwipableStack extends StatefulWidget {
   SwipableStack({
     @required this.builder,
@@ -67,6 +70,7 @@ class SwipableStackState extends State<SwipableStack>
           _swipeCancelAnimationController.value < 0.1);
 
   int _currentIndex = 0;
+
   static const double _defaultSwipeThreshold = 0.44;
 
   var _sessionState = const SwipeSessionState();
@@ -100,7 +104,10 @@ class SwipableStackState extends State<SwipableStack>
     return LayoutBuilder(
       builder: (context, constraints) {
         return Stack(
-          children: _buildCards(context, constraints),
+          children: _buildCards(
+            context,
+            constraints,
+          ),
         );
       },
     );
@@ -118,74 +125,87 @@ class SwipableStackState extends State<SwipableStack>
         ),
       );
     }
-    return List.generate(
+    if (cards.isEmpty) {
+      return [];
+    }
+
+    final positionedCards = List<Widget>.generate(
       cards.length,
       (index) {
         return SwipablePositioned(
           state: _sessionState,
-          overlay: widget.overlayBuilder?.call(
+          index: index,
+          areaConstraints: constraints,
+          child: GestureDetector(
+            onPanStart: (d) {
+              if (!_canSwipeStart) {
+                return;
+              }
+
+              if (_swipeCancelAnimationController.animating) {
+                _swipeCancelAnimationController
+                  ..stop()
+                  ..reset();
+              }
+              setState(() {
+                _sessionState = _sessionState.copyWith(
+                  localPosition: d.localPosition,
+                  startPosition: d.globalPosition,
+                  currentPosition: d.globalPosition,
+                );
+              });
+            },
+            onPanUpdate: (d) {
+              if (!_canSwipeStart) {
+                return;
+              }
+              if (_swipeCancelAnimationController.animating) {
+                _swipeCancelAnimationController
+                  ..stop()
+                  ..reset();
+              }
+              setState(() {
+                _sessionState = _sessionState.copyWith(
+                  localPosition: _sessionState.localPosition ?? d.localPosition,
+                  startPosition:
+                      _sessionState.startPosition ?? d.globalPosition,
+                  currentPosition: d.globalPosition,
+                );
+              });
+            },
+            onPanEnd: (d) {
+              if (_animating) {
+                return;
+              }
+              final shouldCancel = (_sessionState.differecne?.dx?.abs() ?? 0) <=
+                  constraints.maxWidth * (_defaultSwipeThreshold / 2);
+
+              if (shouldCancel || !_allowMoveNext) {
+                _cancelSwipe();
+                return;
+              }
+              _moveNext();
+            },
+            child: cards[index],
+          ),
+        );
+      },
+    ).reversed.toList();
+    if (widget.overlayBuilder != null) {
+      positionedCards.add(
+        SwipablePositioned.overlay(
+          sessionState: _sessionState,
+          areaConstraints: constraints,
+          child: widget.overlayBuilder?.call(
             _sessionState.differenceToAlignment(
               areaConstraints: constraints,
               swipeThreshold: _defaultSwipeThreshold,
             ),
           ),
-          index: index,
-          areaConstraints: constraints,
-          onPanStart: (d) {
-            if (!_canSwipeStart) {
-              return;
-            }
-
-            if (_swipeCancelAnimationController.animating) {
-              _swipeCancelAnimationController
-                ..stop()
-                ..reset();
-            }
-            setState(() {
-              _sessionState = _sessionState.copyWith(
-                localPosition: d.localPosition,
-                startPosition: d.globalPosition,
-                currentPosition: d.globalPosition,
-              );
-            });
-          },
-          onPanUpdate: (d) {
-            if (!_canSwipeStart) {
-              return;
-            }
-            if (_swipeCancelAnimationController.animating) {
-              _swipeCancelAnimationController
-                ..stop()
-                ..reset();
-            }
-            setState(() {
-              _sessionState = _sessionState.copyWith(
-                localPosition: _sessionState.localPosition ?? d.localPosition,
-                startPosition: _sessionState.startPosition ?? d.globalPosition,
-                currentPosition: d.globalPosition,
-              );
-            });
-          },
-          onPanEnd: (d) {
-            if (_animating) {
-              return;
-            }
-            final shouldMoveBack = (_sessionState.differecne?.dx?.abs() ?? 0) <=
-                constraints.maxWidth * (_defaultSwipeThreshold / 2);
-            if (shouldMoveBack) {
-              _cancelSwipe();
-              return;
-            }
-            if (_allowMoveNext) {
-              _moveNext();
-            } else {
-              _cancelSwipe();
-            }
-          },
-          child: cards[index],
-        );
-      },
-    ).reversed.toList();
+        ),
+      );
+    }
+    return positionedCards;
   }
 
   void _animatePosition() {
@@ -220,7 +240,7 @@ class SwipableStackState extends State<SwipableStack>
     );
   }
 
-  /// This method ignores [SwipableStack.onWillMoveNext].
+  /// This method not calls [SwipableStack.onWillMoveNext].
   void moveNext(SwipeDirection swipeDirection) {
     if (!_canSwipeStart) {
       return;
@@ -232,11 +252,11 @@ class SwipableStackState extends State<SwipableStack>
       localPosition: Offset.zero,
     );
     final origin = _sessionState.currentPosition ?? Offset.zero;
-    final deviceWidth = MediaQuery.of(context).size.width * 1.04;
+    final moveDistance = MediaQuery.of(context).size.width * 1.04;
 
     _positionAnimation = Tween<Offset>(
       begin: origin,
-      end: origin + Offset(isDirectionRight ? deviceWidth : -deviceWidth, 0),
+      end: origin + Offset(isDirectionRight ? moveDistance : -moveDistance, 0),
     ).animate(
       CurvedAnimation(
         parent: _swipeAssistAnimationController,
@@ -270,7 +290,8 @@ class SwipableStackState extends State<SwipableStack>
         (deviceWidth - diffXAbs * 0.25) / _sessionState.differecne.dx.abs();
     _positionAnimation = Tween<Offset>(
       begin: _sessionState.currentPosition,
-      end: _sessionState.currentPosition + _sessionState.differecne * multiple,
+      end: _sessionState.currentPosition +
+          _sessionState.differecne * multiple * 1.1,
     ).animate(
       CurvedAnimation(
         parent: _swipeAssistAnimationController,
