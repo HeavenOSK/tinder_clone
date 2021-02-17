@@ -2,7 +2,7 @@ import 'dart:math' as math;
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:tinder_clone/pages/home/swipe_session_state/swipe_sesion_state.dart';
+import 'package:tinder_clone/pages/home/swipe_sesion_state.dart';
 
 class SwipablePositioned extends StatelessWidget {
   const SwipablePositioned({
@@ -13,6 +13,7 @@ class SwipablePositioned extends StatelessWidget {
     @required this.onPanUpdate,
     @required this.onPanEnd,
     @required this.child,
+    this.overlay,
     Key key,
   }) : super(key: key);
 
@@ -23,8 +24,9 @@ class SwipablePositioned extends StatelessWidget {
   final GestureDragStartCallback onPanStart;
   final GestureDragUpdateCallback onPanUpdate;
   final GestureDragEndCallback onPanEnd;
+  final Widget overlay;
 
-  Offset get _currentPositionDiff => state.diff ?? Offset.zero;
+  Offset get _currentPositionDiff => state.differecne ?? Offset.zero;
 
   bool get _isFirst => index == 0;
 
@@ -98,7 +100,12 @@ class SwipablePositioned extends StatelessWidget {
               onPanStart: onPanStart,
               onPanUpdate: onPanUpdate,
               onPanEnd: onPanEnd,
-              child: child,
+              child: Stack(
+                children: [
+                  child,
+                  if (_isFirst && overlay != null) overlay,
+                ],
+              ),
             ),
           ),
         ),

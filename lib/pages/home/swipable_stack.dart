@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:tinder_clone/pages/home/swipable_positioned.dart';
 import 'package:tinder_clone/pages/home/swipable_stack_controller.dart';
-import 'package:tinder_clone/pages/home/swipe_session_state/swipe_sesion_state.dart';
+import 'package:tinder_clone/pages/home/swipe_sesion_state.dart';
 
 extension _Animating on AnimationController {
   bool get animating =>
@@ -25,20 +25,10 @@ typedef OnWillMoveNext = bool Function(
   SwipeDirection direction,
 );
 
-typedef JudgeDirectionFromDifference = SwipeDirection Function(
-  Alignment differenceAlignment,
+typedef SwipableStackOverlayBuilder = Widget Function(
+  Alignment alignmentPerThreshold,
 );
 
-Alignment _mapDifferenceToAlignment({
-  @required BoxConstraints areaConstraints,
-  @required Offset difference,
-}) =>
-    Alignment(
-      difference.dx / (areaConstraints.maxWidth / 2),
-      difference.dy / (areaConstraints.maxHeight / 2),
-    );
-
-// TODO(heavenOSK): Controller ロジック
 // TODO(heavenOSK): カードにラベルを表示する　API
 class SwipableStack extends StatefulWidget {
   SwipableStack({
@@ -46,6 +36,7 @@ class SwipableStack extends StatefulWidget {
     this.controller,
     this.onSwipeCompleted,
     this.onWillMoveNext,
+    this.overlayBuilder,
     this.itemCount,
   }) : super(key: controller?.swipableStackStateKey);
 
@@ -53,6 +44,7 @@ class SwipableStack extends StatefulWidget {
   final SwipableStackController controller;
   final SwipeCompletionCallback onSwipeCompleted;
   final OnWillMoveNext onWillMoveNext;
+  final SwipableStackOverlayBuilder overlayBuilder;
   final int itemCount;
 
   @override
@@ -75,12 +67,12 @@ class SwipableStackState extends State<SwipableStack>
           _swipeCancelAnimationController.value < 0.1);
 
   int _currentIndex = 0;
-  static const double _defaultSwipeThreshold = 0.22;
+  static const double _defaultSwipeThreshold = 0.44;
 
   var _sessionState = const SwipeSessionState();
 
   bool get _allowMoveNext {
-    final isDirectionRight = _sessionState.diff.dx > 0;
+    final isDirectionRight = _sessionState.differecne.dx > 0;
     final swipeDirection =
         isDirectionRight ? SwipeDirection.right : SwipeDirection.left;
     return widget.onWillMoveNext?.call(
@@ -131,6 +123,12 @@ class SwipableStackState extends State<SwipableStack>
       (index) {
         return SwipablePositioned(
           state: _sessionState,
+          overlay: widget.overlayBuilder?.call(
+            _sessionState.differenceToAlignment(
+              areaConstraints: constraints,
+              swipeThreshold: _defaultSwipeThreshold,
+            ),
+          ),
           index: index,
           areaConstraints: constraints,
           onPanStart: (d) {
@@ -172,8 +170,8 @@ class SwipableStackState extends State<SwipableStack>
             if (_animating) {
               return;
             }
-            final shouldMoveBack = (_sessionState.diff?.dx?.abs() ?? 0) <=
-                constraints.maxWidth * _defaultSwipeThreshold;
+            final shouldMoveBack = (_sessionState.differecne?.dx?.abs() ?? 0) <=
+                constraints.maxWidth * (_defaultSwipeThreshold / 2);
             if (shouldMoveBack) {
               _cancelSwipe();
               return;
@@ -234,7 +232,7 @@ class SwipableStackState extends State<SwipableStack>
       localPosition: Offset.zero,
     );
     final origin = _sessionState.currentPosition ?? Offset.zero;
-    final deviceWidth = MediaQuery.of(context).size.width * 1.08;
+    final deviceWidth = MediaQuery.of(context).size.width * 1.04;
 
     _positionAnimation = Tween<Offset>(
       begin: origin,
@@ -262,17 +260,17 @@ class SwipableStackState extends State<SwipableStack>
   }
 
   void _moveNext() {
-    final isDirectionRight = _sessionState.diff.dx > 0;
+    final isDirectionRight = _sessionState.differecne.dx > 0;
     final swipeDirection =
         isDirectionRight ? SwipeDirection.right : SwipeDirection.left;
 
     final deviceWidth = MediaQuery.of(context).size.width;
-    final diffXAbs = _sessionState.diff.dx.abs();
+    final diffXAbs = _sessionState.differecne.dx.abs();
     final multiple =
-        (deviceWidth - diffXAbs * 0.25) / _sessionState.diff.dx.abs();
+        (deviceWidth - diffXAbs * 0.25) / _sessionState.differecne.dx.abs();
     _positionAnimation = Tween<Offset>(
       begin: _sessionState.currentPosition,
-      end: _sessionState.currentPosition + _sessionState.diff * multiple,
+      end: _sessionState.currentPosition + _sessionState.differecne * multiple,
     ).animate(
       CurvedAnimation(
         parent: _swipeAssistAnimationController,

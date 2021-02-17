@@ -1,18 +1,30 @@
 import 'package:flutter/material.dart';
 
+const double _fingerHeight = 50;
+
 extension SwipeSessionStateX on SwipeSessionState {
-  Offset get diff {
+  Offset get differecne {
     if (this == null || currentPosition == null || startPosition == null) {
       return Offset.zero;
     }
     return currentPosition - startPosition;
   }
 
+  Alignment differenceToAlignment({
+    @required BoxConstraints areaConstraints,
+    @required double swipeThreshold,
+  }) =>
+      Alignment(
+        differecne.dx / (areaConstraints.maxWidth / 2),
+        differecne.dy / (areaConstraints.maxHeight / 2),
+      ) /
+      swipeThreshold;
+
   Offset get localFingerPosition {
     if (localPosition == null) {
       return null;
     }
-    return localPosition + const Offset(0, -50);
+    return localPosition + const Offset(0, -_fingerHeight);
   }
 }
 

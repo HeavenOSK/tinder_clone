@@ -1,4 +1,7 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:tinder_clone/pages/home/card_label.dart';
 import 'package:tinder_clone/pages/home/swipable_stack.dart';
 import 'package:tinder_clone/pages/home/swipable_stack_controller.dart';
 
@@ -37,7 +40,7 @@ class _HomeState extends State<Home> {
       Color(0xffccff90),
       Color(0xffffff8d),
       Color(0xffffe57f),
-    ].map((color) => color.withOpacity(1)).toList();
+    ].map((color) => color.withOpacity(0.75)).toList();
     return Scaffold(
       body: SafeArea(
         child: Stack(
@@ -46,6 +49,29 @@ class _HomeState extends State<Home> {
               controller: _controller,
               onSwipeCompleted: (index, direction) {
                 print('$index, $direction');
+              },
+              overlayBuilder: (alignmentPerThreshold) {
+                print(alignmentPerThreshold.x);
+                final isRight = alignmentPerThreshold.x > 0;
+                final opacity = min<double>(alignmentPerThreshold.x.abs(), 1);
+                return Padding(
+                  padding: EdgeInsets.symmetric(
+                    vertical: _bottomAreaHeight,
+                    horizontal: 16,
+                  ),
+                  child: Stack(
+                    children: [
+                      Opacity(
+                        opacity: isRight ? opacity : 0,
+                        child: CardLabel.like(),
+                      ),
+                      Opacity(
+                        opacity: !isRight ? opacity : 0,
+                        child: CardLabel.nope(),
+                      ),
+                    ],
+                  ),
+                );
               },
               builder: (_, index) {
                 return Padding(
@@ -59,8 +85,21 @@ class _HomeState extends State<Home> {
                       ),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: _colors[index.abs() % _colors.length],
+                          // color: _colors[index.abs() % _colors.length],
                           borderRadius: BorderRadius.circular(8),
+                          color: Colors.white,
+                          boxShadow: [
+                            BoxShadow(
+                              blurRadius: 2,
+                              color: Colors.black.withOpacity(0.15),
+                              offset: Offset(0, 1),
+                            ),
+                            BoxShadow(
+                              blurRadius: 4,
+                              color: Colors.black.withOpacity(0.5),
+                              offset: Offset(0, 2),
+                            ),
+                          ],
                         ),
                         child: Center(
                           child: Text('index:$index'),

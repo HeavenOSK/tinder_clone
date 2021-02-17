@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:tinder_clone/pages/home/swipe_session_state/swipe_sesion_state.dart';
+import 'package:tinder_clone/pages/home/swipe_sesion_state.dart';
 
 class UserCard extends StatelessWidget {
   const UserCard({
@@ -26,7 +26,7 @@ class UserCard extends StatelessWidget {
     final size = MediaQuery.of(context).size;
     final deviceWidth = size.width;
 
-    final diff = state.diff ?? Offset.zero;
+    final diff = state.differecne ?? Offset.zero;
 
     return Transform.rotate(
       angle: -(diff.dx ?? 0) / deviceWidth * math.pi / 24,
